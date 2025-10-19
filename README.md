@@ -1,4 +1,4 @@
-# CustomPhotoPicker
+# WJPhotoPicker
 
 一个功能强大、高度可定制的 iOS 相册选择器，支持 WebP 动图展示、示例图片（支持 URL）、单选/多选模式，提供两种交互模式。集成专业级 FloatingPanel 实现流畅的滚动联动效果和模态视图隐藏动画。
 
