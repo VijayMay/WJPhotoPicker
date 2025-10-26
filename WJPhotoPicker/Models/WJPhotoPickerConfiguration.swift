@@ -9,8 +9,34 @@ import UIKit
 
 /// 相册选择器配置
 struct WJPhotoPickerConfiguration {
+    // MARK: - 主题配置
+    
+    /// 主题配置
+    let theme: WJPhotoPickerTheme
+    
+    // MARK: - 导航栏配置
+    
+    /// 是否显示返回按钮
+    let showBackButton: Bool
+    
+    /// 返回按钮图标 (默认 chevron.left)
+    let backButtonIcon: UIImage?
+    
+    // MARK: - 选择器配置
+    
     /// 选择器类型
     let type: WJPhotoPickerType
+    
+    // MARK: - 预览区域配置 (仅滑块模式)
+    
+    /// 媒体类型
+    enum PreviewMediaType {
+        case webp
+        case mp4
+    }
+    
+    /// 预览媒体类型
+    let previewMediaType: PreviewMediaType
     
     /// WebP 动图 URL
     let animatedImageURL: URL?
@@ -18,8 +44,23 @@ struct WJPhotoPickerConfiguration {
     /// WebP 动图数据（本地）
     let animatedImageData: Data?
     
-    /// 动图占位图
-    let animatedImagePlaceholder: UIImage?
+    /// MP4 视频 URL
+    let videoURL: URL?
+    
+    /// 预览媒体占位图
+    let previewPlaceholder: UIImage?
+    
+    /// 自动播放 (默认 true)
+    let previewAutoPlay: Bool
+    
+    /// 循环播放 (默认 true)
+    let previewLoopPlay: Bool
+    
+    /// 兼容旧版本
+    @available(*, deprecated, message: "使用 previewPlaceholder 代替")
+    var animatedImagePlaceholder: UIImage? {
+        return previewPlaceholder
+    }
     
     /// 示例图片列表（支持 UIImage 和 URL）
     let sampleImages: [WJSampleImageItem]
@@ -43,11 +84,15 @@ struct WJPhotoPickerConfiguration {
     /// 是否支持多选
     let allowsMultipleSelection: Bool
     
-    /// 网格列数
+    /// 网格列数 (已废弃，使用 gridColumns)
+    @available(*, deprecated, message: "使用 gridColumns 代替")
     let numberOfColumns: Int
     
     /// 网格间距
     let gridSpacing: CGFloat
+    
+    /// 网格列数 (nil = 自动: 375+ 为 4列, <375 为 3列)
+    let gridColumns: Int?
     
     /// 标准模式的导航栏标题（仅标准模式有效）
     let navigationTitle: String?
@@ -85,31 +130,67 @@ struct WJPhotoPickerConfiguration {
     /// 限制权限按钮文字（Limited 权限且无照片时）
     let limitedPermissionButtonTitle: String?
     
+    // MARK: - Grid Item 文案配置
+    
+    /// 相机 item 标题
+    let cameraTitle: String
+    
+    /// Gallery item 标题
+    let galleryTitle: String
+    
+    /// 示例图片 item 标题
+    let sampleImageTitle: String
+    
+    // MARK: - 广告配置
+    
+    /// 是否显示广告（根据VIP状态）
+    let showAdvertisement: Bool
+    
+    /// 自定义广告视图（如果为 nil 则使用默认视图）
+    let customAdvertisementView: UIView?
+    
+    /// 广告点击回调
+    var onAdvertisementTapped: (() -> Void)?
+    
     /// 默认配置
     static var `default`: WJPhotoPickerConfiguration {
         return WJPhotoPickerConfiguration(
+            theme: .default,
+            showBackButton: true,
+            backButtonIcon: UIImage(systemName: "chevron.left"),
             type: .standard,
+            previewMediaType: .webp,
             animatedImageURL: nil,
             animatedImageData: nil,
-            animatedImagePlaceholder: UIImage(systemName: "photo"),
+            videoURL: nil,
+            previewPlaceholder: UIImage(systemName: "photo"),
+            previewAutoPlay: true,
+            previewLoopPlay: true,
             sampleImages: [],
             maxSelectionCount: 9,
             allowsCamera: true,
             allowsMultipleSelection: true,
             numberOfColumns: 3,
-            gridSpacing: 2,
+            gridSpacing: 5,
+            gridColumns: nil,
             navigationTitle: nil,
             slidingPanelTopHeightRatio: 0.33,
             permissionIcon: UIImage(systemName: "photo.on.rectangle.angled"),
             permissionMessage: "需要访问您的照片",
             permissionButtonTitle: "前往设置",
-            defaultAlbumTitle: "相册",
+            defaultAlbumTitle: "All Picture",
             emptyAlbumIcon: UIImage(systemName: "photo.on.rectangle"),
             emptyAlbumMessage: "相册中还没有照片\n快去拍摄或添加照片吧",
-            emptyAlbumButtonTitle: nil,  // 可选，不显示按钮
+            emptyAlbumButtonTitle: nil,
             limitedPermissionIcon: UIImage(systemName: "photo.badge.plus"),
             limitedPermissionMessage: "当前仅可访问部分照片，建议开启完整相册权限以获得更好体验",
-            limitedPermissionButtonTitle: "前往设置"
+            limitedPermissionButtonTitle: "前往设置",
+            cameraTitle: "Camera",
+            galleryTitle: "Gallery",
+            sampleImageTitle: "Sample",
+            showAdvertisement: false,
+            customAdvertisementView: nil,
+            onAdvertisementTapped: nil
         )
     }
 }

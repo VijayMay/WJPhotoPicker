@@ -21,6 +21,7 @@ class WJSampleImageCell: UICollectionViewCell {
         imageView.contentMode = .scaleAspectFill
         imageView.clipsToBounds = true
         imageView.backgroundColor = .systemGray6
+        imageView.layer.cornerRadius = 4
         return imageView
     }()
     

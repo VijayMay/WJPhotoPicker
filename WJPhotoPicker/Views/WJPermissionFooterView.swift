@@ -17,7 +17,7 @@ class WJPermissionFooterView: UICollectionReusableView {
     
     private let containerView: UIView = {
         let view = UIView()
-        view.backgroundColor = .systemBackground
+        view.backgroundColor = .clear
         return view
     }()
     
@@ -34,6 +34,8 @@ class WJPermissionFooterView: UICollectionReusableView {
         label.numberOfLines = 0
         label.font = .systemFont(ofSize: 16)
         label.textColor = .systemGray
+        label.backgroundColor = .clear
+        label.lineBreakMode = .byWordWrapping
         return label
     }()
     
@@ -41,8 +43,8 @@ class WJPermissionFooterView: UICollectionReusableView {
         let button = UIButton(type: .system)
         button.titleLabel?.font = .systemFont(ofSize: 16, weight: .semibold)
         button.layer.cornerRadius = 8
-        button.backgroundColor = .systemBlue
-        button.setTitleColor(.white, for: .normal)
+        button.backgroundColor = .white
+        button.setTitleColor(.black, for: .normal)
         return button
     }()
     
@@ -65,7 +67,7 @@ class WJPermissionFooterView: UICollectionReusableView {
     // MARK: - Setup
     
     private func setupUI() {
-        backgroundColor = .systemBackground
+        backgroundColor = .clear
         
         addSubview(containerView)
         containerView.addSubview(iconImageView)
@@ -121,5 +123,9 @@ class WJPermissionFooterView: UICollectionReusableView {
         } else {
             settingsButton.isHidden = true
         }
+        
+        // 强制更新布局，确保多行文本正确显示
+        setNeedsLayout()
+        layoutIfNeeded()
     }
 }

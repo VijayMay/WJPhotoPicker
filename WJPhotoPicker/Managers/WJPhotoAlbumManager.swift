@@ -27,96 +27,122 @@ class WJPhotoAlbumManager: NSObject {
     
     // MARK: - Public Methods
     
-    /// 获取所有相册列表
-    func fetchAlbumList() -> [WJPhotoAlbum] {
-        var albums: [WJPhotoAlbum] = []
-        
-        // 1. 最近项目（优先显示）
-        let recentOptions = PHFetchOptions()
-        recentOptions.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
-        
-        let recentAlbums = PHAssetCollection.fetchAssetCollections(
-            with: .smartAlbum,
-            subtype: .smartAlbumUserLibrary,
-            options: nil
-        )
-        
-        recentAlbums.enumerateObjects { collection, _, _ in
-            let count = self.fetchPhotosCount(from: collection)
-            if count > 0 {
-                albums.append(WJPhotoAlbum(
-                    title: collection.localizedTitle ?? "最近项目",
-                    assetCollection: collection,
-                    count: count
-                ))
-            }
-        }
-        
-        // 2. 个人收藏
-        let favoriteAlbums = PHAssetCollection.fetchAssetCollections(
-            with: .smartAlbum,
-            subtype: .smartAlbumFavorites,
-            options: nil
-        )
-        
-        favoriteAlbums.enumerateObjects { collection, _, _ in
-            let count = self.fetchPhotosCount(from: collection)
-            if count > 0 {
-                albums.append(WJPhotoAlbum(
-                    title: collection.localizedTitle ?? "个人收藏",
-                    assetCollection: collection,
-                    count: count
-                ))
-            }
-        }
-        
-        // 3. 用户创建的相册
-        let userAlbums = PHAssetCollection.fetchAssetCollections(
-            with: .album,
-            subtype: .albumRegular,
-            options: nil
-        )
-        
-        userAlbums.enumerateObjects { collection, _, _ in
-            let count = self.fetchPhotosCount(from: collection)
-            if count > 0 {
-                albums.append(WJPhotoAlbum(
-                    title: collection.localizedTitle ?? "未命名相册",
-                    assetCollection: collection,
-                    count: count
-                ))
-            }
-        }
-        
-        // 4. 其他智能相册
-        let smartAlbumSubtypes: [PHAssetCollectionSubtype] = [
-            .smartAlbumScreenshots,
-            .smartAlbumSelfPortraits,
-            .smartAlbumPanoramas,
-            .smartAlbumVideos,
-            .smartAlbumLivePhotos
-        ]
-        
-        for subtype in smartAlbumSubtypes {
-            let smartAlbums = PHAssetCollection.fetchAssetCollections(
+    /// 获取所有相册列表（异步加载缩略图）
+    func fetchAlbumList(completion: @escaping ([WJPhotoAlbum]) -> Void) {
+        DispatchQueue.global(qos: .userInitiated).async {
+            var albums: [WJPhotoAlbum] = []
+            let group = DispatchGroup()
+            
+            // 1. 最近项目（优先显示）
+            let recentOptions = PHFetchOptions()
+            recentOptions.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
+            
+            let recentAlbums = PHAssetCollection.fetchAssetCollections(
                 with: .smartAlbum,
-                subtype: subtype,
+                subtype: .smartAlbumUserLibrary,
                 options: nil
             )
             
-            smartAlbums.enumerateObjects { collection, _, _ in
+            recentAlbums.enumerateObjects { collection, _, _ in
                 let count = self.fetchPhotosCount(from: collection)
                 if count > 0 {
-                    albums.append(WJPhotoAlbum(
-                        title: collection.localizedTitle ?? "智能相册",
-                        assetCollection: collection,
-                        count: count
-                    ))
+                    group.enter()
+                    self.fetchFirstAssetThumbnail(from: collection) { thumbnail in
+                        albums.append(WJPhotoAlbum(
+                            title: collection.localizedTitle ?? "最近项目",
+                            assetCollection: collection,
+                            count: count,
+                            thumbnail: thumbnail
+                        ))
+                        group.leave()
+                    }
                 }
             }
+            
+            // 2. 个人收藏
+            let favoriteAlbums = PHAssetCollection.fetchAssetCollections(
+                with: .smartAlbum,
+                subtype: .smartAlbumFavorites,
+                options: nil
+            )
+            
+            favoriteAlbums.enumerateObjects { collection, _, _ in
+                let count = self.fetchPhotosCount(from: collection)
+                if count > 0 {
+                    group.enter()
+                    self.fetchFirstAssetThumbnail(from: collection) { thumbnail in
+                        albums.append(WJPhotoAlbum(
+                            title: collection.localizedTitle ?? "个人收藏",
+                            assetCollection: collection,
+                            count: count,
+                            thumbnail: thumbnail
+                        ))
+                        group.leave()
+                    }
+                }
+            }
+            
+            // 3. 用户创建的相册
+            let userAlbums = PHAssetCollection.fetchAssetCollections(
+                with: .album,
+                subtype: .albumRegular,
+                options: nil
+            )
+            
+            userAlbums.enumerateObjects { collection, _, _ in
+                let count = self.fetchPhotosCount(from: collection)
+                if count > 0 {
+                    group.enter()
+                    self.fetchFirstAssetThumbnail(from: collection) { thumbnail in
+                        albums.append(WJPhotoAlbum(
+                            title: collection.localizedTitle ?? "未命名相册",
+                            assetCollection: collection,
+                            count: count,
+                            thumbnail: thumbnail
+                        ))
+                        group.leave()
+                    }
+                }
+            }
+            
+            // 4. 其他智能相册
+            let smartAlbumSubtypes: [PHAssetCollectionSubtype] = [
+                .smartAlbumScreenshots,
+                .smartAlbumSelfPortraits,
+                .smartAlbumPanoramas,
+                .smartAlbumVideos,
+                .smartAlbumLivePhotos
+            ]
+            
+            for subtype in smartAlbumSubtypes {
+                let smartAlbums = PHAssetCollection.fetchAssetCollections(
+                    with: .smartAlbum,
+                    subtype: subtype,
+                    options: nil
+                )
+                
+                smartAlbums.enumerateObjects { collection, _, _ in
+                    let count = self.fetchPhotosCount(from: collection)
+                    if count > 0 {
+                        group.enter()
+                        self.fetchFirstAssetThumbnail(from: collection) { thumbnail in
+                            albums.append(WJPhotoAlbum(
+                                title: collection.localizedTitle ?? "智能相册",
+                                assetCollection: collection,
+                                count: count,
+                                thumbnail: thumbnail
+                            ))
+                            group.leave()
+                        }
+                    }
+                }
+            }
+            
+            // 等待所有缩略图加载完成
+            group.notify(queue: .main) {
+                completion(albums)
+            }
         }
-        
-        return albums
     }
     
     /// 获取最近照片
@@ -214,6 +240,38 @@ class WJPhotoAlbumManager: NSObject {
         options.predicate = NSPredicate(format: "mediaType = %d", PHAssetMediaType.image.rawValue)
         let assets = PHAsset.fetchAssets(in: collection, options: options)
         return assets.count
+    }
+    
+    /// 获取相册中第一张照片的缩略图
+    private func fetchFirstAssetThumbnail(from collection: PHAssetCollection, completion: @escaping (UIImage?) -> Void) {
+        let options = PHFetchOptions()
+        options.predicate = NSPredicate(format: "mediaType = %d", PHAssetMediaType.image.rawValue)
+        options.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
+        options.fetchLimit = 1
+        
+        let assets = PHAsset.fetchAssets(in: collection, options: options)
+        
+        guard let firstAsset = assets.firstObject else {
+            completion(nil)
+            return
+        }
+        
+        let imageOptions = PHImageRequestOptions()
+        imageOptions.deliveryMode = .opportunistic
+        imageOptions.resizeMode = .fast
+        imageOptions.isNetworkAccessAllowed = true
+        imageOptions.isSynchronous = true
+        
+        let targetSize = CGSize(width: 80, height: 80) // 2x for retina
+        
+        imageManager.requestImage(
+            for: firstAsset,
+            targetSize: targetSize,
+            contentMode: .aspectFill,
+            options: imageOptions
+        ) { image, _ in
+            completion(image)
+        }
     }
 }
 

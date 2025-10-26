@@ -19,10 +19,34 @@ class WJFloatingPanelLayout: FloatingPanelLayout {
     
     var anchors: [FloatingPanelState: FloatingPanelLayoutAnchoring] {
         return [
-            .full: FloatingPanelLayoutAnchor(absoluteInset: 20.0, edge: .top, referenceGuide: .safeArea),
-            .half: FloatingPanelLayoutAnchor(fractionalInset: topHeightRatio, edge: .top, referenceGuide: .superview),
-            // 移除tip状态，避免吸附行为
+            // ✅ full 状态: 距离导航栏底部 0px
+            .full: FloatingPanelLayoutAnchor(
+                absoluteInset: 0.0,
+                edge: .top,
+                referenceGuide: .safeArea
+            ),
+            
+            // ✅ half 状态: 预览区域下方 18px
+            // 计算方式: 11px(top) + 199px(preview @ 375) + 18px(spacing)
+            .half: FloatingPanelLayoutAnchor(
+                absoluteInset: calculateHalfPosition(),
+                edge: .top,
+                referenceGuide: .safeArea
+            ),
         ]
+    }
+    
+    /// 计算 half 状态位置
+    private func calculateHalfPosition() -> CGFloat {
+        let screenWidth = UIScreen.main.bounds.width
+        let baseWidth: CGFloat = 375
+        let baseHeight: CGFloat = 199
+        let previewHeight = (baseHeight / baseWidth) * screenWidth
+        
+        let topMargin: CGFloat = 11
+        let bottomMargin: CGFloat = 18
+        
+        return topMargin + previewHeight + bottomMargin
     }
     
     func backdropAlpha(for state: FloatingPanelState) -> CGFloat {
@@ -30,17 +54,7 @@ class WJFloatingPanelLayout: FloatingPanelLayout {
     }
     
     func shouldRemove(interactionVelocityThreshold: CGFloat) -> Bool {
-        return true // 允许快速向下滑动关闭
-    }
-    
-    /// 自定义移除速度阈值 (降低阈值使其更容易触发)
-    func removalVelocityThreshold() -> CGFloat {
-        return 100.0 // 大幅降低到100
-    }
-    
-    /// 移除进度阈值 - 滑动多远就移除
-    func removalProgressThreshold() -> CGFloat {
-        return 0.25 // 滑动25%就可以移除
+        return false // 禁用向下滑动关闭，最低只能到 half 状态
     }
     
     /// 禁用状态吸附行为

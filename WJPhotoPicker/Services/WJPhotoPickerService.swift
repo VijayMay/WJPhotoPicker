@@ -39,11 +39,8 @@ class WJPhotoPickerService {
     
     /// 获取相册列表
     func fetchAlbums(completion: @escaping ([WJPhotoAlbum]) -> Void) {
-        DispatchQueue.global(qos: .userInitiated).async {
-            let albums = self.photoManager.fetchAlbumList()
-            DispatchQueue.main.async {
-                completion(albums)
-            }
+        photoManager.fetchAlbumList { albums in
+            completion(albums)
         }
     }
     

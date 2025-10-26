@@ -1,17 +1,17 @@
 //
-//  WJCameraCell.swift
-//  CustomPhotoPicker
+//  WJGalleryCell.swift
+//  WJPhotoPicker
 //
-//  Created by Meiwenjie on 2025/10/18.
+//  Created by Cascade on 2025/10/25.
 //
 
 import UIKit
 import SnapKit
 
-/// 相机 Cell
-class WJCameraCell: UICollectionViewCell {
+/// Gallery Cell - 用于触发系统权限选择器
+class WJGalleryCell: UICollectionViewCell {
     
-    static let reuseIdentifier = "WJCameraCell"
+    static let reuseIdentifier = "WJGalleryCell"
     
     // MARK: - UI Components
     
@@ -22,9 +22,9 @@ class WJCameraCell: UICollectionViewCell {
         return view
     }()
     
-    private let cameraIconView: UIImageView = {
+    private let galleryIconView: UIImageView = {
         let imageView = UIImageView()
-        imageView.image = UIImage(systemName: "camera.fill")
+        imageView.image = UIImage(systemName: "photo.on.rectangle.angled")
         imageView.tintColor = .label
         imageView.contentMode = .scaleAspectFit
         return imageView
@@ -32,7 +32,7 @@ class WJCameraCell: UICollectionViewCell {
     
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.text = "Camera"
+        label.text = "Gallery"
         label.font = .systemFont(ofSize: 12, weight: .medium)
         label.textColor = .label
         label.textAlignment = .center
@@ -55,21 +55,21 @@ class WJCameraCell: UICollectionViewCell {
     
     private func setupUI() {
         contentView.addSubview(containerView)
-        containerView.addSubview(cameraIconView)
+        containerView.addSubview(galleryIconView)
         containerView.addSubview(titleLabel)
         
         containerView.snp.makeConstraints { make in
             make.edges.equalToSuperview()
         }
         
-        cameraIconView.snp.makeConstraints { make in
+        galleryIconView.snp.makeConstraints { make in
             make.centerX.equalToSuperview()
             make.centerY.equalToSuperview().offset(-10)
             make.width.height.equalTo(32)
         }
         
         titleLabel.snp.makeConstraints { make in
-            make.top.equalTo(cameraIconView.snp.bottom).offset(4)
+            make.top.equalTo(galleryIconView.snp.bottom).offset(4)
             make.leading.trailing.equalToSuperview().inset(4)
         }
     }

@@ -26,7 +26,7 @@ class WJFloatingPanelContentViewController: UIViewController {
     // UI组件
     private let toolbarView: UIView = {
         let view = UIView()
-        view.backgroundColor = .systemBackground
+        view.backgroundColor = .clear
         return view
     }()
     
@@ -52,7 +52,7 @@ class WJFloatingPanelContentViewController: UIViewController {
     // 内容视图
     private let contentContainerView: UIView = {
         let view = UIView()
-        view.backgroundColor = .systemBackground
+        view.backgroundColor = .clear
         return view
     }()
     
@@ -72,13 +72,22 @@ class WJFloatingPanelContentViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
-        configureToolbar()
+    }
+    
+    // MARK: - Public Methods
+    
+    /// 更新背景色
+    func updateBackgroundColor(_ color: UIColor) {
+        view.backgroundColor = color
+        // contentContainerView 保持透明，避免遮挡权限引导视图
+        // toolbarView 保持透明，显示父视图的背景色
     }
     
     
     // MARK: - Setup
     
     private func setupUI() {
+        // 背景色将通过 updateBackgroundColor 方法设置
         view.backgroundColor = .systemBackground
         
         // 添加圆角
@@ -94,9 +103,8 @@ class WJFloatingPanelContentViewController: UIViewController {
         view.addSubview(toolbarView)
         view.addSubview(contentContainerView)
         
-        toolbarView.addSubview(cancelButton)
+        // 只添加相册选择器
         toolbarView.addSubview(albumSelectorButton)
-        toolbarView.addSubview(doneButton)
         
         setupConstraints()
     }
@@ -108,40 +116,14 @@ class WJFloatingPanelContentViewController: UIViewController {
             make.height.equalTo(44)
         }
         
-        cancelButton.snp.makeConstraints { make in
-            make.leading.equalToSuperview().offset(16)
-            make.centerY.equalToSuperview()
-        }
-        
-        doneButton.snp.makeConstraints { make in
-            make.trailing.equalToSuperview().offset(-16)
-            make.centerY.equalToSuperview()
-        }
-        
+        // 相册选择器居中
         albumSelectorButton.snp.makeConstraints { make in
-            make.centerX.centerY.equalToSuperview()
-            make.leading.greaterThanOrEqualTo(cancelButton.snp.trailing).offset(16)
-            make.trailing.lessThanOrEqualTo(doneButton.snp.leading).offset(-16)
+            make.center.equalToSuperview()
         }
         
         contentContainerView.snp.makeConstraints { make in
             make.top.equalTo(toolbarView.snp.bottom)
             make.leading.trailing.bottom.equalToSuperview()
-        }
-    }
-    
-    private func configureToolbar() {
-        // 根据配置决定是否显示多选工具栏
-        if configuration.allowsMultipleSelection {
-            // 多选模式：显示取消、相册选择、完成按钮
-            cancelButton.isHidden = false
-            doneButton.isHidden = false
-            albumSelectorButton.isHidden = false
-        } else {
-            // 单选模式：只显示相册选择按钮
-            cancelButton.isHidden = true
-            doneButton.isHidden = true
-            albumSelectorButton.isHidden = false
         }
     }
     
@@ -152,9 +134,21 @@ class WJFloatingPanelContentViewController: UIViewController {
         return contentContainerView
     }
     
+    /// 获取工具栏的高度（包括顶部偏移）
+    var toolbarHeight: CGFloat {
+        return albumSelectorButton.isHidden ? 34 : (8 + 44) // 隐藏时34px间距，显示时为52px
+    }
+    
     /// 更新工具栏高度（用于动画）
     func updateToolbarHeight(animated: Bool = true) {
-        // FloatingPanel会自动处理布局，这里可以添加自定义动画逻辑
+        let newHeight: CGFloat = albumSelectorButton.isHidden ? 0 : 44
+        let topOffset: CGFloat = albumSelectorButton.isHidden ? 34 : 8
+        
+        toolbarView.snp.updateConstraints { make in
+            make.height.equalTo(newHeight)
+            make.top.equalToSuperview().offset(topOffset)
+        }
+        
         if animated {
             UIView.animate(withDuration: 0.3) {
                 self.view.layoutIfNeeded()
@@ -196,17 +190,8 @@ extension WJFloatingPanelContentViewController: FloatingPanelControllerDelegate 
     }
     
     func floatingPanelDidChangeState(_ vc: FloatingPanelController) {
-        // 状态变化时检查是否需要移除
-        let screenHeight = vc.view.bounds.height
-        let currentPosition = vc.surfaceLocation.y
-        let positionRatio = currentPosition / screenHeight
-        
-        // 如果滑动超过60%，直接移除
-        if positionRatio > 0.6 {
-            vc.removePanelFromParent(animated: true) { [weak self] in
-                self?.onDismiss?()
-            }
-        }
+        // 状态变化时的处理
+        // 不再自动移除面板，用户只能通过返回按钮关闭
     }
     
     func floatingPanelDidMove(_ vc: FloatingPanelController) {
@@ -234,38 +219,7 @@ extension WJFloatingPanelContentViewController: FloatingPanelControllerDelegate 
     
     private func floatingPanelDidEndDragging(_ vc: FloatingPanelController, withVelocity velocity: CGPoint, targetState: FloatingPanelState) {
         // 结束拖拽时的处理
-        let screenHeight = vc.view.bounds.height
-        let currentPosition = vc.surfaceLocation.y
-        
-        // 计算当前位置相对于屏幕的比例
-        let positionRatio = currentPosition / screenHeight
-        
-        // 情况1: 滑动到底部1/3位置 (最重要的判断)
-        if positionRatio > 0.6 {  // 降低到60%位置，更容易触发
-            // 强制移除面板而不是调用回调
-            vc.removePanelFromParent(animated: true) { [weak self] in
-                self?.onDismiss?()
-            }
-            return
-        }
-        
-        // 情况2: 快速向下滑动 (速度优先)
-        if velocity.y > 200 {  // 进一步降低速度阈值
-            vc.removePanelFromParent(animated: true) { [weak self] in
-                self?.onDismiss?()
-            }
-            return
-        }
-        
-        // 移除了tip状态判断，因为布局中已经不包含tip状态
-        
-        // 情况4: 中等速度 + 一定位置 (组合判断)
-        if velocity.y > 100 && positionRatio > 0.5 {
-            vc.removePanelFromParent(animated: true) { [weak self] in
-                self?.onDismiss?()
-            }
-            return
-        }
+        // 不再自动移除面板，用户只能通过返回按钮关闭
     }
     
     func floatingPanelWillRemove(_ vc: FloatingPanelController) {

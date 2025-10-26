@@ -20,21 +20,24 @@ class WJAlbumCell: UITableViewCell {
         imageView.contentMode = .scaleAspectFill
         imageView.clipsToBounds = true
         imageView.layer.cornerRadius = 4
-        imageView.backgroundColor = .systemGray6
+        imageView.layer.borderWidth = 1
+        imageView.layer.borderColor = UIColor.clear.cgColor
+        imageView.backgroundColor = UIColor(white: 0.2, alpha: 1.0)
         return imageView
     }()
     
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 16, weight: .medium)
-        label.textColor = .label
+        label.textColor = .white
         return label
     }()
     
     private let countLabel: UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 14)
-        label.textColor = .secondaryLabel
+        label.font = .systemFont(ofSize: 14, weight: .regular)
+        label.textColor = UIColor(white: 1.0, alpha: 0.6)
+        label.textAlignment = .right
         return label
     }()
     
@@ -45,14 +48,6 @@ class WJAlbumCell: UITableViewCell {
         imageView.contentMode = .scaleAspectFit
         imageView.isHidden = true
         return imageView
-    }()
-    
-    private let textStackView: UIStackView = {
-        let stack = UIStackView()
-        stack.axis = .vertical
-        stack.spacing = 4
-        stack.alignment = .leading
-        return stack
     }()
     
     // MARK: - Initialization
@@ -70,41 +65,47 @@ class WJAlbumCell: UITableViewCell {
     // MARK: - Setup
     
     private func setupUI() {
+        backgroundColor = .clear
         selectionStyle = .none
         
-        textStackView.addArrangedSubview(titleLabel)
-        textStackView.addArrangedSubview(countLabel)
-        
         contentView.addSubview(thumbnailImageView)
-        contentView.addSubview(textStackView)
-        contentView.addSubview(checkmarkImageView)
+        contentView.addSubview(titleLabel)
+        contentView.addSubview(countLabel)
         
         thumbnailImageView.snp.makeConstraints { make in
             make.leading.equalToSuperview().offset(16)
             make.centerY.equalToSuperview()
-            make.width.height.equalTo(60)
+            make.width.height.equalTo(40)
         }
         
-        textStackView.snp.makeConstraints { make in
+        titleLabel.snp.makeConstraints { make in
             make.leading.equalTo(thumbnailImageView.snp.trailing).offset(12)
             make.centerY.equalToSuperview()
-            make.trailing.lessThanOrEqualTo(checkmarkImageView.snp.leading).offset(-12)
         }
         
-        checkmarkImageView.snp.makeConstraints { make in
+        countLabel.snp.makeConstraints { make in
+            make.leading.equalTo(titleLabel.snp.trailing).offset(8)
             make.trailing.equalToSuperview().offset(-16)
             make.centerY.equalToSuperview()
-            make.width.height.equalTo(20)
+            make.width.greaterThanOrEqualTo(40)
         }
     }
     
     // MARK: - Public Methods
     
-    func configure(with album: WJPhotoAlbum, isSelected: Bool) {
+    func configure(album: WJPhotoAlbum, isSelected: Bool) {
         titleLabel.text = album.title
-        countLabel.text = "\(album.count) 张照片"
+        countLabel.text = "\(album.count)"
         thumbnailImageView.image = album.thumbnail
-        checkmarkImageView.isHidden = !isSelected
+        
+        // 设置选中状态
+        if isSelected {
+            backgroundColor = UIColor(white: 1.0, alpha: 0.1)
+            thumbnailImageView.layer.borderColor = UIColor.systemBlue.cgColor
+        } else {
+            backgroundColor = .clear
+            thumbnailImageView.layer.borderColor = UIColor.clear.cgColor
+        }
     }
     
     // MARK: - Reuse

@@ -102,4 +102,20 @@ class WJAlbumSelectorButton: UIButton {
         albumTitleLabel.text = title
         countLabel.isHidden = true
     }
+    
+    /// 设置展开/收起状态
+    func setExpanded(_ expanded: Bool) {
+        isExpanded = expanded
+        
+        // 更新箭头方向
+        let imageName = expanded ? "chevron.up" : "chevron.down"
+        arrowImageView.image = UIImage(systemName: imageName)
+        
+        // 添加旋转动画
+        UIView.animate(withDuration: 0.3) {
+            self.arrowImageView.transform = expanded 
+                ? CGAffineTransform(rotationAngle: .pi) 
+                : .identity
+        }
+    }
 }

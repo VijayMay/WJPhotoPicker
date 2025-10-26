@@ -31,6 +31,7 @@ class WJPermissionGuideView: UIView {
         label.font = .systemFont(ofSize: 20, weight: .semibold)
         label.textColor = .label
         label.textAlignment = .center
+        label.numberOfLines = 0
         return label
     }()
     
@@ -48,8 +49,8 @@ class WJPermissionGuideView: UIView {
         let button = UIButton(type: .system)
         button.setTitle("去设置", for: .normal)
         button.titleLabel?.font = .systemFont(ofSize: 16, weight: .medium)
-        button.backgroundColor = .systemBlue
-        button.setTitleColor(.white, for: .normal)
+        button.backgroundColor = .white
+        button.setTitleColor(.black, for: .normal)
         button.layer.cornerRadius = 12
         button.addTarget(self, action: #selector(settingsButtonTapped), for: .touchUpInside)
         return button
@@ -78,7 +79,7 @@ class WJPermissionGuideView: UIView {
     // MARK: - Setup
     
     private func setupUI() {
-        backgroundColor = .systemBackground
+        backgroundColor = .clear
         
         stackView.addArrangedSubview(iconImageView)
         stackView.addArrangedSubview(titleLabel)

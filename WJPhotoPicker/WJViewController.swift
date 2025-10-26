@@ -193,19 +193,37 @@ class WJViewController: UIViewController, UIImagePickerControllerDelegate & UINa
     // MARK: - Actions
     
     @objc private func openSlidingPanelPicker() {
-        // 滑动面板类型 + WebP动图 + 示例图片
+        // 滑动面板类型 + WebP动图 + 示例图片 + 浅色主题
+        let lightTheme = WJPhotoPickerTheme(
+            primaryColor: UIColor(hex: "#007AFF"),
+            primaryGradientColors: [
+                UIColor(hex: "#007AFF"),
+                UIColor(hex: "#5AC8FA")
+            ],
+            darkColors: WJPhotoPickerTheme.DarkColors(),
+            lightColors: WJPhotoPickerTheme.LightColors()
+        )
+        
         let config = WJPhotoPickerConfiguration(
+            theme: lightTheme,
+            showBackButton: true,
+            backButtonIcon: UIImage(systemName: "chevron.left"),
             type: .slidingPanel,
+            previewMediaType: .webp,
             // 使用真实的 WebP 动图 URL（来自 Cloudinary 示例）
             animatedImageURL: URL(string: "https://res.cloudinary.com/demo/image/upload/w_150,h_100,q_80/bored_animation.webp"),
             animatedImageData: nil,
-            animatedImagePlaceholder: UIImage(systemName: "photo.on.rectangle.angled"),
+            videoURL: nil,
+            previewPlaceholder: UIImage(systemName: "photo.on.rectangle.angled"),
+            previewAutoPlay: true,
+            previewLoopPlay: true,
             sampleImages: loadSampleImages(),
             maxSelectionCount: 9,
             allowsCamera: true,
             allowsMultipleSelection: true,
             numberOfColumns: 3,
             gridSpacing: 2,
+            gridColumns: nil,
             navigationTitle: nil,
             slidingPanelTopHeightRatio: 0.33,
             permissionIcon: UIImage(systemName: "photo.on.rectangle.angled"),
@@ -214,29 +232,55 @@ class WJViewController: UIViewController, UIImagePickerControllerDelegate & UINa
             defaultAlbumTitle: "相册",
             emptyAlbumIcon: UIImage(systemName: "photo.on.rectangle"),
             emptyAlbumMessage: "相册中还没有照片\n快去拍摄或添加照片吧",
-            emptyAlbumButtonTitle: nil,  // 不显示按钮
+            emptyAlbumButtonTitle: nil,
             limitedPermissionIcon: UIImage(systemName: "photo.badge.plus"),
             limitedPermissionMessage: "您选择了部分照片权限，当前没有可访问的照片",
-            limitedPermissionButtonTitle: "开启完整权限"
+            limitedPermissionButtonTitle: "开启完整权限",
+            cameraTitle: "Camera",
+            galleryTitle: "Gallery",
+            sampleImageTitle: "Sample",
+            showAdvertisement: true,
+            customAdvertisementView: nil,
+            onAdvertisementTapped: { [weak self] in
+                self?.handleAdvertisementTapped()
+            }
         )
         
         presentPhotoPicker(with: config, type: "滑动面板")
     }
     
     @objc private func openStandardPicker() {
-        // 标准类型 + 4列布局 + 示例图片
+        // 标准类型 + 4列布局 + 示例图片 + 浅色主题
+        let lightTheme = WJPhotoPickerTheme(
+            primaryColor: UIColor(hex: "#34C759"),
+            primaryGradientColors: [
+                UIColor(hex: "#34C759"),
+                UIColor(hex: "#30D158")
+            ],
+            darkColors: WJPhotoPickerTheme.DarkColors(),
+            lightColors: WJPhotoPickerTheme.LightColors()
+        )
+        
         let config = WJPhotoPickerConfiguration(
+            theme: lightTheme,
+            showBackButton: true,
+            backButtonIcon: UIImage(systemName: "chevron.left"),
             type: .standard,
+            previewMediaType: .webp,
             animatedImageURL: nil,
             animatedImageData: nil,
-            animatedImagePlaceholder: nil,
-            sampleImages: loadSampleImages(),  // 添加示例图片
+            videoURL: nil,
+            previewPlaceholder: nil,
+            previewAutoPlay: true,
+            previewLoopPlay: true,
+            sampleImages: loadSampleImages(),
             maxSelectionCount: 5,
             allowsCamera: true,
             allowsMultipleSelection: true,
             numberOfColumns: 4,
             gridSpacing: 1,
-            navigationTitle: nil,  // 使用相册选择按钮
+            gridColumns: nil,
+            navigationTitle: nil,
             slidingPanelTopHeightRatio: 0.33,
             permissionIcon: UIImage(systemName: "photo.on.rectangle.angled"),
             permissionMessage: "需要访问您的照片来选择图片，请在设置中开启相册权限",
@@ -247,25 +291,56 @@ class WJViewController: UIViewController, UIImagePickerControllerDelegate & UINa
             emptyAlbumButtonTitle: nil,
             limitedPermissionIcon: UIImage(systemName: "photo.badge.plus"),
             limitedPermissionMessage: "当前使用选择照片模式，没有可访问的照片\n建议开启完整相册权限",
-            limitedPermissionButtonTitle: "开启完整权限"
+            limitedPermissionButtonTitle: "开启完整权限",
+            cameraTitle: "Camera",
+            galleryTitle: "Gallery",
+            sampleImageTitle: "Sample",
+            showAdvertisement: false,
+            customAdvertisementView: nil,
+            onAdvertisementTapped: nil
         )
         
-        presentPhotoPicker(with: config, type: "标准")
+        presentPhotoPicker(with: config, type: "标准模式")
     }
     
     @objc private func openSlidingPanelSinglePicker() {
-        // 滑动面板单选模式
+        // 滑动面板单选模式 + 黑色主题
+        let darkTheme = WJPhotoPickerTheme(
+            primaryColor: UIColor(hex: "#FF9500"),
+            primaryGradientColors: [
+                UIColor(hex: "#FF9500"),
+                UIColor(hex: "#FF6B00")
+            ],
+            darkColors: WJPhotoPickerTheme.DarkColors(
+                background: UIColor(hex: "#000000"),
+                cardBackground: UIColor(hex: "#312539"),
+                primaryText: .white,
+                secondaryText: UIColor(white: 1.0, alpha: 0.7),
+                tertiaryText: UIColor(white: 1.0, alpha: 0.5),
+                separator: UIColor(white: 1.0, alpha: 0.2)
+            ),
+            lightColors: WJPhotoPickerTheme.LightColors()
+        )
+        
         let config = WJPhotoPickerConfiguration(
+            theme: darkTheme,
+            showBackButton: true,
+            backButtonIcon: UIImage(systemName: "chevron.left"),
             type: .slidingPanel,
+            previewMediaType: .webp,
             animatedImageURL: URL(string: "https://res.cloudinary.com/demo/image/upload/w_150,h_100,q_80/bored_animation.webp"),
             animatedImageData: nil,
-            animatedImagePlaceholder: UIImage(systemName: "photo.on.rectangle.angled"),
+            videoURL: nil,
+            previewPlaceholder: UIImage(systemName: "photo.on.rectangle.angled"),
+            previewAutoPlay: true,
+            previewLoopPlay: true,
             sampleImages: loadSampleImages(),
-            maxSelectionCount: 1,  // 单选
+            maxSelectionCount: 1,
             allowsCamera: true,
-            allowsMultipleSelection: false,  // 禁用多选
+            allowsMultipleSelection: false,
             numberOfColumns: 3,
             gridSpacing: 2,
+            gridColumns: nil,
             navigationTitle: nil,
             slidingPanelTopHeightRatio: 0.33,
             permissionIcon: UIImage(systemName: "photo.on.rectangle.angled"),
@@ -276,27 +351,58 @@ class WJViewController: UIViewController, UIImagePickerControllerDelegate & UINa
             emptyAlbumMessage: "相册中还没有照片\n快去拍摄或添加照片吧",
             emptyAlbumButtonTitle: nil,
             limitedPermissionIcon: UIImage(systemName: "photo.badge.plus"),
-            limitedPermissionMessage: "您选择了部分照片权限，当前没有可访问的照片\n建议开启完整相册权限以选择更多照片",
-            limitedPermissionButtonTitle: "开启完整权限"
+            limitedPermissionMessage: "当前仅可访问部分照片，建议开启完整相册权限以获得更好体验",
+            limitedPermissionButtonTitle: "前往设置",
+            cameraTitle: "Camera",
+            galleryTitle: "Gallery",
+            sampleImageTitle: "Sample",
+            showAdvertisement: false,
+            customAdvertisementView: nil,
+            onAdvertisementTapped: nil
         )
         
         presentPhotoPicker(with: config, type: "滑动面板单选")
     }
     
     @objc private func openStandardSinglePicker() {
-        // 标准单选模式
+        // 标准单选模式 + 黑色主题
+        let darkTheme = WJPhotoPickerTheme(
+            primaryColor: UIColor(hex: "#AF52DE"),
+            primaryGradientColors: [
+                UIColor(hex: "#AF52DE"),
+                UIColor(hex: "#BF5AF2")
+            ],
+            darkColors: WJPhotoPickerTheme.DarkColors(
+                background: UIColor(hex: "#000000"),
+                cardBackground: UIColor(hex: "#312539"),
+                primaryText: .white,
+                secondaryText: UIColor(white: 1.0, alpha: 0.7),
+                tertiaryText: UIColor(white: 1.0, alpha: 0.5),
+                separator: UIColor(white: 1.0, alpha: 0.2)
+            ),
+            lightColors: WJPhotoPickerTheme.LightColors()
+        )
+        
         let config = WJPhotoPickerConfiguration(
+            theme: darkTheme,
+            showBackButton: true,
+            backButtonIcon: UIImage(systemName: "chevron.left"),
             type: .standard,
+            previewMediaType: .webp,
             animatedImageURL: nil,
             animatedImageData: nil,
-            animatedImagePlaceholder: nil,
+            videoURL: nil,
+            previewPlaceholder: nil,
+            previewAutoPlay: true,
+            previewLoopPlay: true,
             sampleImages: loadSampleImages(),
-            maxSelectionCount: 1,  // 单选
+            maxSelectionCount: 1,
             allowsCamera: true,
-            allowsMultipleSelection: false,  // 禁用多选
+            allowsMultipleSelection: false,
             numberOfColumns: 4,
             gridSpacing: 1,
-            navigationTitle: nil,  // 使用相册选择按钮
+            gridColumns: nil,
+            navigationTitle: nil,
             slidingPanelTopHeightRatio: 0.33,
             permissionIcon: UIImage(systemName: "photo.on.rectangle.angled"),
             permissionMessage: "需要访问您的照片来选择图片，请在设置中开启相册权限",
@@ -307,7 +413,13 @@ class WJViewController: UIViewController, UIImagePickerControllerDelegate & UINa
             emptyAlbumButtonTitle: nil,
             limitedPermissionIcon: UIImage(systemName: "photo.badge.plus"),
             limitedPermissionMessage: "当前使用选择照片模式，没有可访问的照片\n建议开启完整相册权限以选择照片",
-            limitedPermissionButtonTitle: "开启完整权限"
+            limitedPermissionButtonTitle: "开启完整权限",
+            cameraTitle: "Camera",
+            galleryTitle: "Gallery",
+            sampleImageTitle: "Sample",
+            showAdvertisement: false,
+            customAdvertisementView: nil,
+            onAdvertisementTapped: nil
         )
         
         presentPhotoPicker(with: config, type: "标准单选")
@@ -368,7 +480,28 @@ class WJViewController: UIViewController, UIImagePickerControllerDelegate & UINa
         
         let nav = UINavigationController(rootViewController: picker)
         nav.modalPresentationStyle = .fullScreen
+        
+        // 根据选择模式设置界面风格
+        if config.allowsMultipleSelection {
+            // 多选模式使用浅色主题
+            nav.overrideUserInterfaceStyle = .light
+        } else {
+            // 单选模式使用深色主题
+            nav.overrideUserInterfaceStyle = .dark
+        }
+        
         present(nav, animated: true)
+    }
+    
+    private func handleAdvertisementTapped() {
+        let alert = UIAlertController(
+            title: "升级到 Pro",
+            message: "解锁所有功能，享受更好的体验！",
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "确定", style: .default))
+        alert.addAction(UIAlertAction(title: "取消", style: .cancel))
+        present(alert, animated: true)
     }
     
     private func handlePhotosSelected(_ assets: [PHAsset], type: String) {

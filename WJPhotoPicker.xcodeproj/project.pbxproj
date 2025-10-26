@@ -3,23 +3,23 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 77;
+	objectVersion = 70;
 	objects = {
 
 /* Begin PBXBuildFile section */
-		EA3E87F72EA50B2E00D84313 /* FloatingPanel in Frameworks */ = {isa = PBXBuildFile; productRef = EA3E87F62EA50B2E00D84313 /* FloatingPanel */; };
-		EADB3C002EA488EE00698FC5 /* SnapKit in Frameworks */ = {isa = PBXBuildFile; productRef = EADB3BFF2EA488EE00698FC5 /* SnapKit */; };
-		EADB3C032EA4890200698FC5 /* SDWebImage in Frameworks */ = {isa = PBXBuildFile; productRef = EADB3C022EA4890200698FC5 /* SDWebImage */; };
-		EADB3C062EA489AD00698FC5 /* SDWebImageWebPCoder in Frameworks */ = {isa = PBXBuildFile; productRef = EADB3C052EA489AD00698FC5 /* SDWebImageWebPCoder */; };
-		EADB3C092EA48A4D00698FC5 /* CropViewController in Frameworks */ = {isa = PBXBuildFile; productRef = EADB3C082EA48A4D00698FC5 /* CropViewController */; };
+		05D283320513AF080A036F2E /* Pods_WJPhotoPicker.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FB5AB525D8A1DEBD231DC1EE /* Pods_WJPhotoPicker.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		50A026B7E426F09A4CB09736 /* Pods-WJPhotoPicker.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-WJPhotoPicker.release.xcconfig"; path = "Target Support Files/Pods-WJPhotoPicker/Pods-WJPhotoPicker.release.xcconfig"; sourceTree = "<group>"; };
+		BA18B5034E1317B53C847932 /* Pods-WJPhotoPicker.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-WJPhotoPicker.debug.xcconfig"; path = "Target Support Files/Pods-WJPhotoPicker/Pods-WJPhotoPicker.debug.xcconfig"; sourceTree = "<group>"; };
+		EA19389D2EABD7AA0006EE26 /* WJPhotoPicker.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = WJPhotoPicker.xcodeproj; sourceTree = "<group>"; };
 		EADB3BE02EA4793900698FC5 /* WJPhotoPicker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WJPhotoPicker.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		FB5AB525D8A1DEBD231DC1EE /* Pods_WJPhotoPicker.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_WJPhotoPicker.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		EADB3BF22EA4793D00698FC5 /* Exceptions for "WJPhotoPicker" folder in "WJPhotoPicker" target */ = {
+		EADB3BF22EA4793D00698FC5 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
@@ -29,14 +29,7 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		EADB3BE22EA4793900698FC5 /* WJPhotoPicker */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				EADB3BF22EA4793D00698FC5 /* Exceptions for "WJPhotoPicker" folder in "WJPhotoPicker" target */,
-			);
-			path = WJPhotoPicker;
-			sourceTree = "<group>";
-		};
+		EADB3BE22EA4793900698FC5 /* WJPhotoPicker */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (EADB3BF22EA4793D00698FC5 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = WJPhotoPicker; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -44,22 +37,44 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				EADB3C032EA4890200698FC5 /* SDWebImage in Frameworks */,
-				EA3E87F72EA50B2E00D84313 /* FloatingPanel in Frameworks */,
-				EADB3C092EA48A4D00698FC5 /* CropViewController in Frameworks */,
-				EADB3C002EA488EE00698FC5 /* SnapKit in Frameworks */,
-				EADB3C062EA489AD00698FC5 /* SDWebImageWebPCoder in Frameworks */,
+				05D283320513AF080A036F2E /* Pods_WJPhotoPicker.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		2FB996575FDA9EDD1B624F0F /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				FB5AB525D8A1DEBD231DC1EE /* Pods_WJPhotoPicker.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		D727D08BB8D15ADD674C3C9D /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				BA18B5034E1317B53C847932 /* Pods-WJPhotoPicker.debug.xcconfig */,
+				50A026B7E426F09A4CB09736 /* Pods-WJPhotoPicker.release.xcconfig */,
+			);
+			path = Pods;
+			sourceTree = "<group>";
+		};
+		EA19389F2EABD7AA0006EE26 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
 		EADB3BD72EA4793900698FC5 = {
 			isa = PBXGroup;
 			children = (
 				EADB3BE22EA4793900698FC5 /* WJPhotoPicker */,
 				EADB3BE12EA4793900698FC5 /* Products */,
+				D727D08BB8D15ADD674C3C9D /* Pods */,
+				2FB996575FDA9EDD1B624F0F /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -78,9 +93,11 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = EADB3BF32EA4793D00698FC5 /* Build configuration list for PBXNativeTarget "WJPhotoPicker" */;
 			buildPhases = (
+				178FD359890E6DCFC2EB033D /* [CP] Check Pods Manifest.lock */,
 				EADB3BDC2EA4793900698FC5 /* Sources */,
 				EADB3BDD2EA4793900698FC5 /* Frameworks */,
 				EADB3BDE2EA4793900698FC5 /* Resources */,
+				1242BCB617CE5D2DBA767A4B /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -90,13 +107,6 @@
 				EADB3BE22EA4793900698FC5 /* WJPhotoPicker */,
 			);
 			name = WJPhotoPicker;
-			packageProductDependencies = (
-				EADB3BFF2EA488EE00698FC5 /* SnapKit */,
-				EADB3C022EA4890200698FC5 /* SDWebImage */,
-				EADB3C052EA489AD00698FC5 /* SDWebImageWebPCoder */,
-				EADB3C082EA48A4D00698FC5 /* CropViewController */,
-				EA3E87F62EA50B2E00D84313 /* FloatingPanel */,
-			);
 			productName = WJPhotoPicker;
 			productReference = EADB3BE02EA4793900698FC5 /* WJPhotoPicker.app */;
 			productType = "com.apple.product-type.application";
@@ -117,6 +127,7 @@
 				};
 			};
 			buildConfigurationList = EADB3BDB2EA4793900698FC5 /* Build configuration list for PBXProject "WJPhotoPicker" */;
+			compatibilityVersion = "Xcode 14.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -124,17 +135,14 @@
 				Base,
 			);
 			mainGroup = EADB3BD72EA4793900698FC5;
-			minimizedProjectReferenceProxies = 1;
-			packageReferences = (
-				EADB3BFE2EA488EE00698FC5 /* XCRemoteSwiftPackageReference "SnapKit" */,
-				EADB3C012EA4890200698FC5 /* XCRemoteSwiftPackageReference "SDWebImage" */,
-				EADB3C042EA489AD00698FC5 /* XCRemoteSwiftPackageReference "SDWebImageWebPCoder" */,
-				EADB3C072EA48A4D00698FC5 /* XCRemoteSwiftPackageReference "TOCropViewController" */,
-				EA3E87F52EA50B2E00D84313 /* XCRemoteSwiftPackageReference "FloatingPanel" */,
-			);
-			preferredProjectObjectVersion = 77;
 			productRefGroup = EADB3BE12EA4793900698FC5 /* Products */;
 			projectDirPath = "";
+			projectReferences = (
+				{
+					ProductGroup = EA19389F2EABD7AA0006EE26 /* Products */;
+					ProjectRef = EA19389D2EABD7AA0006EE26 /* WJPhotoPicker.xcodeproj */;
+				},
+			);
 			projectRoot = "";
 			targets = (
 				EADB3BDF2EA4793900698FC5 /* WJPhotoPicker */,
@@ -152,6 +160,48 @@
 		};
 /* End PBXResourcesBuildPhase section */
 
+/* Begin PBXShellScriptBuildPhase section */
+		1242BCB617CE5D2DBA767A4B /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-WJPhotoPicker/Pods-WJPhotoPicker-frameworks-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-WJPhotoPicker/Pods-WJPhotoPicker-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-WJPhotoPicker/Pods-WJPhotoPicker-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		178FD359890E6DCFC2EB033D /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-WJPhotoPicker-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
 		EADB3BDC2EA4793900698FC5 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
@@ -165,6 +215,7 @@
 /* Begin XCBuildConfiguration section */
 		EADB3BF42EA4793D00698FC5 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = BA18B5034E1317B53C847932 /* Pods-WJPhotoPicker.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -194,6 +245,7 @@
 		};
 		EADB3BF52EA4793D00698FC5 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 50A026B7E426F09A4CB09736 /* Pods-WJPhotoPicker.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -258,7 +310,7 @@
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -321,7 +373,7 @@
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -362,77 +414,6 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
-
-/* Begin XCRemoteSwiftPackageReference section */
-		EA3E87F52EA50B2E00D84313 /* XCRemoteSwiftPackageReference "FloatingPanel" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/SCENEE/FloatingPanel";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 3.0.1;
-			};
-		};
-		EADB3BFE2EA488EE00698FC5 /* XCRemoteSwiftPackageReference "SnapKit" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/SnapKit/SnapKit.git";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 5.7.1;
-			};
-		};
-		EADB3C012EA4890200698FC5 /* XCRemoteSwiftPackageReference "SDWebImage" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/SDWebImage/SDWebImage.git";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 5.2.3;
-			};
-		};
-		EADB3C042EA489AD00698FC5 /* XCRemoteSwiftPackageReference "SDWebImageWebPCoder" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/SDWebImage/SDWebImageWebPCoder.git";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 0.14.6;
-			};
-		};
-		EADB3C072EA48A4D00698FC5 /* XCRemoteSwiftPackageReference "TOCropViewController" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/TimOliver/TOCropViewController";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 3.1.0;
-			};
-		};
-/* End XCRemoteSwiftPackageReference section */
-
-/* Begin XCSwiftPackageProductDependency section */
-		EA3E87F62EA50B2E00D84313 /* FloatingPanel */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = EA3E87F52EA50B2E00D84313 /* XCRemoteSwiftPackageReference "FloatingPanel" */;
-			productName = FloatingPanel;
-		};
-		EADB3BFF2EA488EE00698FC5 /* SnapKit */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = EADB3BFE2EA488EE00698FC5 /* XCRemoteSwiftPackageReference "SnapKit" */;
-			productName = SnapKit;
-		};
-		EADB3C022EA4890200698FC5 /* SDWebImage */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = EADB3C012EA4890200698FC5 /* XCRemoteSwiftPackageReference "SDWebImage" */;
-			productName = SDWebImage;
-		};
-		EADB3C052EA489AD00698FC5 /* SDWebImageWebPCoder */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = EADB3C042EA489AD00698FC5 /* XCRemoteSwiftPackageReference "SDWebImageWebPCoder" */;
-			productName = SDWebImageWebPCoder;
-		};
-		EADB3C082EA48A4D00698FC5 /* CropViewController */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = EADB3C072EA48A4D00698FC5 /* XCRemoteSwiftPackageReference "TOCropViewController" */;
-			productName = CropViewController;
-		};
-/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = EADB3BD82EA4793900698FC5 /* Project object */;
 }

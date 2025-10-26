@@ -7,6 +7,7 @@
 
 import UIKit
 import Photos
+import PhotosUI
 import FloatingPanel
 import SnapKit
 
@@ -39,9 +40,18 @@ class WJPhotoPickerViewController: UIViewController, UIImagePickerControllerDele
     // MARK: - UI Components (Sliding Panel Type)
     
     private var topContainerView: UIView?
-    private var animatedImageView: WJAnimatedImageView?    // UI组件
+    private var mediaPreviewView: WJMediaPreviewView?    // 媒体预览组件 (WebP/MP4)
     private var floatingPanelController: FloatingPanelController?
     private var floatingPanelContentVC: WJFloatingPanelContentViewController?
+    
+    // MARK: - Advertisement
+    
+    private var advertisementView: WJAdvertisementView?
+    
+    // MARK: - Album List
+    
+    private var albumListView: WJAlbumListView?
+    private var isAlbumListVisible = false
     
     // MARK: - UI Components (Common)
     
@@ -59,13 +69,14 @@ class WJPhotoPickerViewController: UIViewController, UIImagePickerControllerDele
         layout.sectionInset = .zero
         
         let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
-        collectionView.backgroundColor = .systemBackground
+        collectionView.backgroundColor = .clear
         collectionView.delegate = self
         collectionView.dataSource = self
         collectionView.allowsMultipleSelection = configuration.allowsMultipleSelection
         
         // 注册所有类型的 Cell
         collectionView.register(WJCameraCell.self, forCellWithReuseIdentifier: WJCameraCell.reuseIdentifier)
+        collectionView.register(WJGalleryCell.self, forCellWithReuseIdentifier: WJGalleryCell.reuseIdentifier)
         collectionView.register(WJSampleImageCell.self, forCellWithReuseIdentifier: WJSampleImageCell.reuseIdentifier)
         collectionView.register(WJPhotoGridCell.self, forCellWithReuseIdentifier: WJPhotoGridCell.reuseIdentifier)
         
@@ -87,6 +98,42 @@ class WJPhotoPickerViewController: UIViewController, UIImagePickerControllerDele
         }
         return view
     }()
+    
+    private lazy var permissionBannerView: WJPermissionBannerView = {
+        let view = WJPermissionBannerView()
+        view.isHidden = true
+        view.onSettingsButtonTapped = { [weak self] in
+            self?.service.openSettings()
+        }
+        return view
+    }()
+    
+    // MARK: - Theme
+    
+    private var currentThemeColors: (background: UIColor, cardBackground: UIColor, primaryText: UIColor, secondaryText: UIColor, tertiaryText: UIColor, separator: UIColor) {
+        // 根据选择模式决定使用深色还是浅色主题：单选用深色，多选用浅色
+        if configuration.allowsMultipleSelection {
+            // 多选模式：使用浅色主题
+            return (
+                configuration.theme.lightColors.background,
+                configuration.theme.lightColors.cardBackground,
+                configuration.theme.lightColors.primaryText,
+                configuration.theme.lightColors.secondaryText,
+                configuration.theme.lightColors.tertiaryText,
+                configuration.theme.lightColors.separator
+            )
+        } else {
+            // 单选模式：使用深色主题
+            return (
+                configuration.theme.darkColors.background,
+                configuration.theme.darkColors.cardBackground,
+                configuration.theme.darkColors.primaryText,
+                configuration.theme.darkColors.secondaryText,
+                configuration.theme.darkColors.tertiaryText,
+                configuration.theme.darkColors.separator
+            )
+        }
+    }
     
     private lazy var doneButton: UIBarButtonItem = {
         let button = UIBarButtonItem(
@@ -130,8 +177,10 @@ class WJPhotoPickerViewController: UIViewController, UIImagePickerControllerDele
         switch configuration.type {
         case .slidingPanel:
             setupSlidingPanelUI()
+            setupAdvertisement()  // 滑块模式：在 FloatingPanel 创建后设置广告
         case .standard:
             setupStandardUI()
+            setupAdvertisement()  // 标准模式：在视图创建后设置广告
         }
         
         setupNavigationBar()
@@ -146,27 +195,81 @@ class WJPhotoPickerViewController: UIViewController, UIImagePickerControllerDele
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        animatedImageView?.startAnimating()
+        mediaPreviewView?.startAnimating()
     }
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
-        animatedImageView?.stopAnimating()
+        mediaPreviewView?.stopAnimating()
+    }
+    
+    override func traitCollectionDidChange(_ previous: UITraitCollection?) {
+        super.traitCollectionDidChange(previous)
+        
+        // 当系统深色/浅色模式改变时，更新主题色
+        if traitCollection.hasDifferentColorAppearance(comparedTo: previous) {
+            updateThemeColors()
+        }
+    }
+    
+    // MARK: - Theme Update
+    
+    private func updateThemeColors() {
+        // 更新背景色
+        view.backgroundColor = currentThemeColors.background
+        
+        if configuration.type == .slidingPanel {
+            // 滑块模式：更新顶部容器和 FloatingPanel
+            topContainerView?.backgroundColor = currentThemeColors.background
+            floatingPanelController?.surfaceView.backgroundColor = currentThemeColors.cardBackground
+            floatingPanelContentVC?.updateBackgroundColor(currentThemeColors.cardBackground)
+            mediaPreviewView?.updateBackgroundColor(currentThemeColors.cardBackground)
+        }
+        
+        // 重新应用导航栏主题色
+        let appearance = UINavigationBarAppearance()
+        appearance.configureWithOpaqueBackground()
+        appearance.backgroundColor = currentThemeColors.background
+        appearance.titleTextAttributes = [
+            .foregroundColor: currentThemeColors.primaryText,
+            .font: UIFont.systemFont(ofSize: 17, weight: .semibold)
+        ]
+        appearance.shadowColor = .clear
+        
+        navigationController?.navigationBar.standardAppearance = appearance
+        navigationController?.navigationBar.scrollEdgeAppearance = appearance
+        
+        // 根据选择模式设置按钮颜色
+        let buttonColor: UIColor = configuration.allowsMultipleSelection ? configuration.theme.primaryColor : .white
+        navigationController?.navigationBar.tintColor = buttonColor
     }
     
     // MARK: - Setup UI (Sliding Panel)
     
     private func setupSlidingPanelUI() {
-        // 顶部容器（1/3高度）
+        // 顶部容器 (应用主题背景色)
         let topContainer = UIView()
-        topContainer.backgroundColor = .black
+        topContainer.backgroundColor = currentThemeColors.background
         view.addSubview(topContainer)
         self.topContainerView = topContainer
         
-        // 动图视图
-        let animatedView = WJAnimatedImageView()
-        topContainer.addSubview(animatedView)
-        self.animatedImageView = animatedView
+        // 预览卡片容器 (带圆角和阴影)
+        let previewCard = UIView()
+        previewCard.backgroundColor = .clear
+        previewCard.layer.cornerRadius = 20
+        previewCard.layer.shadowColor = UIColor.black.cgColor
+        previewCard.layer.shadowOpacity = 0.1
+        previewCard.layer.shadowOffset = CGSize(width: 0, height: 2)
+        previewCard.layer.shadowRadius = 8
+        topContainer.addSubview(previewCard)
+        
+        // 媒体预览视图
+        let mediaView = WJMediaPreviewView()
+        mediaView.layer.cornerRadius = 20
+        mediaView.clipsToBounds = true
+        mediaView.updateBackgroundColor(currentThemeColors.cardBackground) // 设置背景颜色
+        previewCard.addSubview(mediaView)
+        self.mediaPreviewView = mediaView
         
         // 创建FloatingPanel
         let floatingPanel = FloatingPanelController()
@@ -182,11 +285,12 @@ class WJPhotoPickerViewController: UIViewController, UIImagePickerControllerDele
         floatingPanel.layout = layout
         
         // 配置FloatingPanel
-        floatingPanel.isRemovalInteractionEnabled = true // 允许向下滑动关闭
-        floatingPanel.backdropView.dismissalTapGestureRecognizer.isEnabled = false // 禁用点击背景关闭
-        
-        // ⭐ 确保FloatingPanel不会超出屏幕边界
+        floatingPanel.isRemovalInteractionEnabled = false // 禁用向下滑动关闭
+        floatingPanel.backdropView.dismissalTapGestureRecognizer.isEnabled = false
+        floatingPanel.backdropView.isHidden = true // 隐藏背景遮罩，使权限引导视图透明
         floatingPanel.surfaceView.clipsToBounds = true
+        floatingPanel.surfaceView.layer.cornerRadius = 16
+        floatingPanel.surfaceView.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
         
         // 显示拖拽手柄
         floatingPanel.surfaceView.grabberHandle.isHidden = false
@@ -200,6 +304,10 @@ class WJPhotoPickerViewController: UIViewController, UIImagePickerControllerDele
         
         // 添加到当前控制器
         floatingPanel.addPanel(toParent: self)
+        
+        // ✅ 应用主题色到 FloatingPanel 背景（在 addPanel 之后，确保 viewDidLoad 已调用）
+        floatingPanel.surfaceView.backgroundColor = currentThemeColors.cardBackground
+        contentVC.updateBackgroundColor(currentThemeColors.cardBackground)
         
         self.floatingPanelController = floatingPanel
         self.floatingPanelContentVC = contentVC
@@ -230,47 +338,109 @@ class WJPhotoPickerViewController: UIViewController, UIImagePickerControllerDele
         
         // 布局顶部容器
         topContainer.snp.makeConstraints { make in
-            make.top.leading.trailing.equalToSuperview()
-            make.height.equalToSuperview().multipliedBy(configuration.slidingPanelTopHeightRatio)
+            make.top.equalTo(view.safeAreaLayoutGuide)
+            make.leading.trailing.equalToSuperview()
+            make.height.equalTo(calculatePreviewAreaHeight())
         }
         
-        animatedView.snp.makeConstraints { make in
+        // 布局预览卡片 (11px top, 16px 左右, 199px @ 375)
+        previewCard.snp.makeConstraints { make in
+            make.top.equalToSuperview().offset(11)
+            make.leading.equalToSuperview().offset(16)
+            make.trailing.equalToSuperview().offset(-16)
+            make.height.equalTo(calculatePreviewHeight())
+        }
+        
+        mediaView.snp.makeConstraints { make in
             make.edges.equalToSuperview()
         }
         
-        // 加载动图
-        loadAnimatedImage()
+        // 加载预览媒体
+        loadPreviewMedia()
     }
     
     private func setupFloatingPanelContent(in containerView: UIView) {
+        // 添加照片网格（最底层）
         containerView.addSubview(photoGridCollectionView)
+        
+        // 添加权限横幅（在照片网格上面）
+        containerView.addSubview(permissionBannerView)
+        
+        // 添加权限引导视图（最顶层）
         containerView.addSubview(permissionGuideView)
         
-        photoGridCollectionView.snp.makeConstraints { make in
+        // 布局权限横幅 (45px 高度，左右16px 边距)
+        permissionBannerView.snp.makeConstraints { make in
             make.top.equalToSuperview().offset(8)
+            make.leading.equalToSuperview().offset(16)
+            make.trailing.equalToSuperview().offset(-16)
+            make.height.equalTo(45)
+        }
+        
+        // 布局照片网格
+        photoGridCollectionView.snp.makeConstraints { make in
+            make.top.equalToSuperview()
             make.leading.trailing.bottom.equalToSuperview()
         }
         
+        // 布局权限引导视图 (全屏覆盖)
         permissionGuideView.snp.makeConstraints { make in
             make.edges.equalToSuperview()
         }
     }
     
+    // MARK: - Helper: Calculate Preview Heights
+    
+    private func calculatePreviewAreaHeight() -> CGFloat {
+        let previewHeight = calculatePreviewHeight()
+        let topMargin: CGFloat = 11
+        let bottomMargin: CGFloat = 18
+        return topMargin + previewHeight + bottomMargin
+    }
+    
+    private func calculatePreviewHeight() -> CGFloat {
+        let screenWidth = view.bounds.width
+        let baseWidth: CGFloat = 375
+        let baseHeight: CGFloat = 199
+        let ratio = screenWidth / baseWidth
+        return baseHeight * ratio
+    }
+    
     // MARK: - Setup UI (Standard)
     
     private func setupStandardUI() {
+        // 添加照片网格（最底层）
         view.addSubview(photoGridCollectionView)
+        
+        // 添加权限横幅（在照片网格上面）
+        view.addSubview(permissionBannerView)
+        
+        // 添加权限引导视图（最顶层）
         view.addSubview(permissionGuideView)
         
-        photoGridCollectionView.snp.makeConstraints { make in
+        // 布局权限横幅 (45px 高度，左右16px 边距)
+        permissionBannerView.snp.makeConstraints { make in
             if #available(iOS 11.0, *) {
                 make.top.equalTo(view.safeAreaLayoutGuide.snp.top).offset(8)
             } else {
                 make.top.equalTo(topLayoutGuide.snp.bottom).offset(8)
             }
+            make.leading.equalToSuperview().offset(16)
+            make.trailing.equalToSuperview().offset(-16)
+            make.height.equalTo(45)
+        }
+        
+        // 布局照片网格
+        photoGridCollectionView.snp.makeConstraints { make in
+            if #available(iOS 11.0, *) {
+                make.top.equalTo(view.safeAreaLayoutGuide.snp.top)
+            } else {
+                make.top.equalTo(topLayoutGuide.snp.bottom)
+            }
             make.leading.trailing.bottom.equalToSuperview()
         }
         
+        // 布局权限引导视图 (全屏覆盖)
         permissionGuideView.snp.makeConstraints { make in
             if #available(iOS 11.0, *) {
                 make.top.equalTo(view.safeAreaLayoutGuide.snp.top)
@@ -284,29 +454,176 @@ class WJPhotoPickerViewController: UIViewController, UIImagePickerControllerDele
     // MARK: - Setup Navigation Bar
     
     private func setupNavigationBar() {
+        // 应用主题色
+        let appearance = UINavigationBarAppearance()
+        appearance.configureWithOpaqueBackground()
+        appearance.backgroundColor = currentThemeColors.background
+        appearance.titleTextAttributes = [
+            .foregroundColor: currentThemeColors.primaryText,
+            .font: UIFont.systemFont(ofSize: 17, weight: .semibold)
+        ]
+        appearance.shadowColor = .clear
+        
+        navigationController?.navigationBar.standardAppearance = appearance
+        navigationController?.navigationBar.scrollEdgeAppearance = appearance
+        
+        // 根据选择模式设置按钮颜色：单选模式用白色，多选模式用 primaryColor
+        let buttonColor: UIColor = configuration.allowsMultipleSelection ? configuration.theme.primaryColor : .white
+        navigationController?.navigationBar.tintColor = buttonColor
+        
         if configuration.type == .standard {
             // 标准模式：显示导航栏
-            navigationItem.leftBarButtonItem = cancelButton
             
-            // 单选模式不显示完成按钮
+            // 左侧：返回按钮
+            if configuration.showBackButton {
+                let backButton = UIBarButtonItem(
+                    image: configuration.backButtonIcon ?? UIImage(systemName: "chevron.left"),
+                    style: .plain,
+                    target: self,
+                    action: #selector(backButtonTapped)
+                )
+                backButton.tintColor = buttonColor
+                navigationItem.leftBarButtonItem = backButton
+            } else {
+                navigationItem.leftBarButtonItem = cancelButton
+            }
+            
+            // 中间：All Picture 按钮 (仅全部权限显示) 或标题
+            updateNavigationTitle()
+            
+            // 右侧：完成按钮 (仅多选)
             if configuration.allowsMultipleSelection {
-                navigationItem.rightBarButtonItem = doneButton
+                let doneBtn = UIBarButtonItem(
+                    title: "完成",
+                    style: .done,
+                    target: self,
+                    action: #selector(doneButtonTapped)
+                )
+                doneBtn.tintColor = buttonColor
+                navigationItem.rightBarButtonItem = doneBtn
             } else {
                 navigationItem.rightBarButtonItem = nil
             }
-            
-            // 使用外部传入的标题或默认使用相册选择按钮
-            if let customTitle = configuration.navigationTitle {
-                title = customTitle
-            } else {
-                navigationItem.titleView = albumSelectorButton
-            }
         } else {
-            // 滑动面板模式：隐藏导航栏
-            navigationController?.setNavigationBarHidden(true, animated: false)
+            // 滑动面板模式：显示导航栏
+            navigationController?.setNavigationBarHidden(false, animated: false)
+            
+            // 左侧：返回按钮
+            if configuration.showBackButton {
+                let backButton = UIBarButtonItem(
+                    image: configuration.backButtonIcon ?? UIImage(systemName: "chevron.left"),
+                    style: .plain,
+                    target: self,
+                    action: #selector(backButtonTapped)
+                )
+                backButton.tintColor = buttonColor
+                navigationItem.leftBarButtonItem = backButton
+            }
+            
+            // 中间：标题
+            title = configuration.navigationTitle ?? "相册"
+            
+            // 右侧：完成按钮 (仅多选)
+            if configuration.allowsMultipleSelection {
+                let doneBtn = UIBarButtonItem(
+                    title: "完成",
+                    style: .done,
+                    target: self,
+                    action: #selector(doneButtonTapped)
+                )
+                doneBtn.tintColor = buttonColor
+                navigationItem.rightBarButtonItem = doneBtn
+            } else {
+                navigationItem.rightBarButtonItem = nil
+            }
         }
         
         updateDoneButtonState()
+    }
+    
+    // MARK: - Helper: Update Navigation Title
+    
+    private func updateNavigationTitle() {
+        guard configuration.type == .standard else { return }
+        
+        let status = service.checkPermission()
+        
+        // 全部权限且没有自定义标题：显示 All Picture 按钮
+        if status == .authorized && configuration.navigationTitle == nil {
+            navigationItem.titleView = albumSelectorButton
+        } else {
+            // 其他情况：显示文字标题
+            navigationItem.titleView = nil
+            title = configuration.navigationTitle ?? "相册"
+        }
+    }
+    
+    @objc private func backButtonTapped() {
+        onCancel?()
+        dismiss(animated: true, completion: nil)
+    }
+    
+    // MARK: - Advertisement Setup
+    
+    private func setupAdvertisement() {
+        // 如果不显示广告，直接返回
+        guard configuration.showAdvertisement else { return }
+        
+        // 创建广告视图
+        let adView = WJAdvertisementView(customView: configuration.customAdvertisementView)
+        adView.isVisible = configuration.showAdvertisement
+        adView.onAdTapped = { [weak self] in
+            self?.configuration.onAdvertisementTapped?()
+        }
+        
+        // 根据模式添加到不同位置
+        switch configuration.type {
+        case .slidingPanel:
+            // 滑块模式：添加到 FloatingPanel 的 contentView 底部
+            if let contentView = floatingPanelContentVC?.contentView {
+                contentView.addSubview(adView)
+                adView.snp.makeConstraints { make in
+                    make.leading.trailing.bottom.equalToSuperview()
+                    make.height.equalTo(WJAdvertisementView.height)
+                }
+            }
+            
+        case .standard:
+            // 标准模式：添加到主视图底部
+            view.addSubview(adView)
+            adView.snp.makeConstraints { make in
+                make.leading.trailing.bottom.equalTo(view.safeAreaLayoutGuide)
+                make.height.equalTo(WJAdvertisementView.height)
+            }
+        }
+        
+        self.advertisementView = adView
+        
+        // 更新照片网格的底部边距
+        updatePhotoGridInsets()
+    }
+    
+    private func updatePhotoGridInsets() {
+        let adHeight = (advertisementView?.isVisible == true) ? WJAdvertisementView.height : 0
+        let topInset = permissionBannerView.isHidden ? 0 : 61
+        
+        // 使用 DispatchQueue 确保在主线程更新，并强制布局
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            
+            self.photoGridCollectionView.contentInset = UIEdgeInsets(
+                top: CGFloat(topInset),
+                left: 0,
+                bottom: adHeight,
+                right: 0
+            )
+            
+            self.photoGridCollectionView.scrollIndicatorInsets = self.photoGridCollectionView.contentInset
+            
+            // 强制更新布局
+            self.photoGridCollectionView.setNeedsLayout()
+            self.photoGridCollectionView.layoutIfNeeded()
+        }
     }
     
     // MARK: - Data Loading
@@ -321,43 +638,83 @@ class WJPhotoPickerViewController: UIViewController, UIImagePickerControllerDele
         let animated = !isInitialLoad
         
         switch status {
-        case .authorized, .limited:
+        case .authorized:
+            // 全部权限：隐藏权限横幅
             if !animated {
-                // 初始加载时禁用所有动画
                 UIView.performWithoutAnimation {
                     permissionGuideView.isHidden = true
+                    permissionBannerView.isHidden = true
                     photoGridCollectionView.isHidden = false
                 }
             } else {
                 permissionGuideView.isHidden = true
+                permissionBannerView.isHidden = true
                 photoGridCollectionView.isHidden = false
             }
-            updateAlbumSelectorVisibility(show: true, animated: animated)  // 显示相册选择器
+            // 更新 contentInset（为广告留出空间）
+            updatePhotoGridInsets()
+            updateAlbumSelectorVisibility(show: true, animated: animated)
+            updateNavigationTitle()  // 更新导航栏标题
             loadAlbums()
             loadPhotos()
-            // 注意：不在这里设置 isInitialLoad = false，等 loadPhotos 完成后再设置
             
-        case .denied:
-            // 权限被拒绝：显示相机和示例图片，footer 显示权限提示
+        case .limited:
+            // 部分权限：显示权限横幅，隐藏相册选择按钮
             if !animated {
-                // 初始加载时禁用所有动画
                 UIView.performWithoutAnimation {
                     permissionGuideView.isHidden = true
+                    permissionBannerView.isHidden = false
                     photoGridCollectionView.isHidden = false
                 }
             } else {
                 permissionGuideView.isHidden = true
+                permissionBannerView.isHidden = false
                 photoGridCollectionView.isHidden = false
             }
-            updateAlbumSelectorVisibility(show: false, animated: animated)  // 隐藏相册选择器
-            photos = []  // 清空照片
-            buildGridItems()  // 只显示相机和示例图片
+            // 更新 contentInset（为横幅和广告留出空间）
+            updatePhotoGridInsets()
+            updateAlbumSelectorVisibility(show: false, animated: animated) // 隐藏相册选择按钮
+            updateNavigationTitle()  // 更新导航栏标题
+            loadAlbums()
+            loadPhotos()
+            
+        case .denied:
+            // 权限被拒绝：隐藏权限横幅（只在 limited 时显示）
+            if !animated {
+                UIView.performWithoutAnimation {
+                    permissionGuideView.isHidden = true
+                    permissionBannerView.isHidden = true
+                    photoGridCollectionView.isHidden = false
+                }
+            } else {
+                permissionGuideView.isHidden = true
+                permissionBannerView.isHidden = true
+                photoGridCollectionView.isHidden = false
+            }
+            // 更新 contentInset（为广告留出空间）
+            updatePhotoGridInsets()
+            updateAlbumSelectorVisibility(show: false, animated: animated)
+            updateNavigationTitle()  // 更新导航栏标题
+            photos = []
+            buildGridItems()
             reloadCollectionView(animated: animated)
-            // 标记初始加载完成
             isInitialLoad = false
             
         case .notDetermined:
-            requestPermission()
+            // 未确定权限：显示权限引导视图，不主动请求权限
+            if !animated {
+                UIView.performWithoutAnimation {
+                    permissionGuideView.isHidden = false
+                    permissionBannerView.isHidden = true
+                    photoGridCollectionView.isHidden = true
+                }
+            } else {
+                permissionGuideView.isHidden = false
+                permissionBannerView.isHidden = true
+                photoGridCollectionView.isHidden = true
+            }
+            updateAlbumSelectorVisibility(show: false, animated: animated)
+            isInitialLoad = false
         }
     }
     
@@ -404,7 +761,7 @@ class WJPhotoPickerViewController: UIViewController, UIImagePickerControllerDele
         }
     }
     
-    /// 构建网格数据源（相机 + 示例图片 + 照片）
+    /// 构建网格数据源（相机 + Gallery + 示例图片 + 照片）
     private func buildGridItems() {
         gridItems.removeAll()
         
@@ -413,26 +770,57 @@ class WJPhotoPickerViewController: UIViewController, UIImagePickerControllerDele
             gridItems.append(.camera)
         }
         
-        // 2. 添加示例图片（如果有）
+        // 2. 添加 Gallery（仅在 limited 权限时）
+        if service.checkPermission() == .limited {
+            gridItems.append(.gallery)
+        }
+        
+        // 3. 添加示例图片（如果有）
         for (index, item) in configuration.sampleImages.enumerated() {
             gridItems.append(.sampleImage(item, index: index))
         }
         
-        // 3. 添加系统照片
+        // 4. 添加系统照片
         for photo in photos {
             gridItems.append(.photo(photo))
         }
     }
     
-    private func loadAnimatedImage() {
-        guard let animatedView = animatedImageView else { return }
+    private func loadPreviewMedia() {
+        guard let mediaView = mediaPreviewView else { return }
         
-        if let url = configuration.animatedImageURL {
-            animatedView.loadAnimatedImage(from: url, placeholder: configuration.animatedImagePlaceholder)
-        } else if let data = configuration.animatedImageData {
-            animatedView.loadAnimatedImage(data: data)
-        } else if let placeholder = configuration.animatedImagePlaceholder {
-            animatedView.loadAnimatedImage(from: nil, placeholder: placeholder)
+        switch configuration.previewMediaType {
+        case .webp:
+            // 加载 WebP 动图
+            if let url = configuration.animatedImageURL {
+                mediaView.loadWebP(
+                    url: url,
+                    placeholder: configuration.previewPlaceholder,
+                    autoPlay: configuration.previewAutoPlay
+                )
+            } else if let data = configuration.animatedImageData {
+                mediaView.loadWebP(
+                    data: data,
+                    placeholder: configuration.previewPlaceholder,
+                    autoPlay: configuration.previewAutoPlay
+                )
+            } else {
+                // 只显示占位图
+                mediaView.loadWebP(
+                    url: nil,
+                    placeholder: configuration.previewPlaceholder,
+                    autoPlay: false
+                )
+            }
+            
+        case .mp4:
+            // 加载 MP4 视频
+            mediaView.loadMP4(
+                url: configuration.videoURL,
+                placeholder: configuration.previewPlaceholder,
+                autoPlay: configuration.previewAutoPlay,
+                loopPlay: configuration.previewLoopPlay
+            )
         }
     }
     
@@ -445,6 +833,71 @@ class WJPhotoPickerViewController: UIViewController, UIImagePickerControllerDele
     // MARK: - Actions
     
     @objc private func albumSelectorButtonTapped() {
+        // 切换相册列表显示/隐藏
+        if isAlbumListVisible {
+            hideAlbumList()
+        } else {
+            showAlbumList()
+        }
+    }
+    
+    private func showAlbumList() {
+        guard !isAlbumListVisible, 
+              let contentView = floatingPanelContentVC?.contentView
+        else { 
+            return 
+        }
+        
+        // 创建相册列表视图
+        let listView = WJAlbumListView()
+        listView.albums = self.albums
+        listView.selectedAlbum = self.currentAlbum
+        listView.onAlbumSelected = { [weak self] album in
+            self?.selectAlbum(album)
+            self?.hideAlbumList()
+        }
+        listView.onDismiss = { [weak self] in
+            self?.hideAlbumList()
+        }
+        
+        // 计算底部偏移（为广告留出空间）
+        let adHeight = (advertisementView?.isVisible == true) ? WJAdvertisementView.height : 0
+        
+        // 显示相册列表
+        // 注意：contentView 已经在工具栏下方，所以 topOffset 为 0
+        listView.show(
+            in: contentView,
+            topOffset: 0,
+            bottomOffset: adHeight
+        )
+        
+        // 更新按钮状态
+        albumSelectorButton.setExpanded(true)
+        
+        self.albumListView = listView
+        self.isAlbumListVisible = true
+    }
+    
+    private func hideAlbumList() {
+        guard let listView = albumListView, isAlbumListVisible else { return }
+        
+        listView.hide { [weak self] in
+            self?.albumListView = nil
+            self?.isAlbumListVisible = false
+        }
+        
+        // 更新按钮状态
+        albumSelectorButton.setExpanded(false)
+    }
+    
+    private func selectAlbum(_ album: WJPhotoAlbum) {
+        currentAlbum = album
+        updateAlbumSelectorButton()
+        loadPhotos()
+    }
+    
+    // 旧的模态视图方式（保留作为备用）
+    private func showAlbumSelectorModal_deprecated() {
         let albumSelector = WJAlbumSelectorViewController()
         albumSelector.albums = albums
         albumSelector.selectedAlbum = currentAlbum
@@ -522,7 +975,7 @@ class WJPhotoPickerViewController: UIViewController, UIImagePickerControllerDele
     /// - Parameter progress: 进度值 (0.0 = half位置或更高, 1.0 = 屏幕底部)
     private func updateModalDismissEffect(progress: CGFloat) {
         guard let topContainer = topContainerView,
-              let animatedView = animatedImageView else { return }
+              let mediaView = mediaPreviewView else { return }
         
         // 限制进度范围
         let clampedProgress = max(0.0, min(1.0, progress))
@@ -549,8 +1002,8 @@ class WJPhotoPickerViewController: UIViewController, UIImagePickerControllerDele
                 topContainer.alpha = alpha
                 topContainer.layer.cornerRadius = cornerRadius
                 
-                // 动图额外效果：更明显的淡化
-                animatedView.alpha = alpha * 0.7
+                // 媒体预览额外效果：更明显的淡化
+                mediaView.alpha = alpha * 0.7
             }, completion: nil)
             
         } else {
@@ -559,7 +1012,7 @@ class WJPhotoPickerViewController: UIViewController, UIImagePickerControllerDele
                 topContainer.transform = .identity
                 topContainer.alpha = 1.0
                 topContainer.layer.cornerRadius = 0
-                animatedView.alpha = 1.0
+                mediaView.alpha = 1.0
             }, completion: nil)
         }
     }
@@ -567,8 +1020,8 @@ class WJPhotoPickerViewController: UIViewController, UIImagePickerControllerDele
     // MARK: - Helper Methods
     
     private func updateAlbumSelectorButton() {
-        // 如果没有相册，使用默认名称
-        let title = currentAlbum?.title ?? configuration.defaultAlbumTitle
+        // 默认使用 "All Picture"，如果有选中的相册则使用相册名称
+        let title = currentAlbum?.title ?? "All Picture"
         
         // 根据模式更新不同的按钮
         if configuration.type == .slidingPanel {
@@ -672,6 +1125,9 @@ extension WJPhotoPickerViewController: UICollectionViewDataSource {
         case .camera:
             return configureCameraCell(at: indexPath)
             
+        case .gallery:
+            return configureGalleryCell(at: indexPath)
+            
         case .sampleImage(let sampleItem, let index):
             return configureSampleImageCell(at: indexPath, item: sampleItem, index: index)
             
@@ -746,10 +1202,24 @@ extension WJPhotoPickerViewController: UICollectionViewDataSource {
     // MARK: - Configure Cells
     
     private func configureCameraCell(at indexPath: IndexPath) -> UICollectionViewCell {
-        let cell = photoGridCollectionView.dequeueReusableCell(
+        guard let cell = photoGridCollectionView.dequeueReusableCell(
             withReuseIdentifier: WJCameraCell.reuseIdentifier,
             for: indexPath
-        )
+        ) as? WJCameraCell else {
+            return UICollectionViewCell()
+        }
+        cell.configure(title: configuration.cameraTitle)
+        return cell
+    }
+    
+    private func configureGalleryCell(at indexPath: IndexPath) -> UICollectionViewCell {
+        guard let cell = photoGridCollectionView.dequeueReusableCell(
+            withReuseIdentifier: WJGalleryCell.reuseIdentifier,
+            for: indexPath
+        ) as? WJGalleryCell else {
+            return UICollectionViewCell()
+        }
+        cell.configure(title: configuration.galleryTitle)
         return cell
     }
     
@@ -805,6 +1275,9 @@ extension WJPhotoPickerViewController: UICollectionViewDelegate {
         case .camera:
             handleCameraSelection(at: indexPath)
             
+        case .gallery:
+            handleGallerySelection(at: indexPath)
+            
         case .sampleImage(let sampleItem, let index):
             handleSampleImageSelection(item: sampleItem, index: index, indexPath: indexPath)
             
@@ -821,6 +1294,9 @@ extension WJPhotoPickerViewController: UICollectionViewDelegate {
         case .camera:
             break  // 相机不需要处理取消选择
             
+        case .gallery:
+            break  // Gallery 不需要处理取消选择
+            
         case .sampleImage(_, let index):
             selectedSampleImages.remove(index)
             updateDoneButtonState()
@@ -836,6 +1312,39 @@ extension WJPhotoPickerViewController: UICollectionViewDelegate {
     private func handleCameraSelection(at indexPath: IndexPath) {
         openCamera()
         photoGridCollectionView.deselectItem(at: indexPath, animated: true)
+    }
+    
+    private func handleGallerySelection(at indexPath: IndexPath) {
+        // 使用 PHPickerViewController 打开系统照片选择器
+        // 优点：不需要权限，不会弹出系统提示框，用户体验更好
+        if #available(iOS 14, *) {
+            presentPHPicker()
+        }
+        photoGridCollectionView.deselectItem(at: indexPath, animated: true)
+    }
+    
+    @available(iOS 14, *)
+    private func presentPHPicker() {
+        var config = PHPickerConfiguration(photoLibrary: .shared())
+        
+        // 设置选择数量限制
+        if configuration.allowsMultipleSelection {
+            config.selectionLimit = configuration.maxSelectionCount
+        } else {
+            config.selectionLimit = 1
+        }
+        
+        // 只选择图片
+        config.filter = .images
+        
+        // 设置选择模式（iOS 15+）
+        if #available(iOS 15, *) {
+            config.selection = .ordered
+        }
+        
+        let picker = PHPickerViewController(configuration: config)
+        picker.delegate = self
+        present(picker, animated: true)
     }
     
     private func handleSampleImageSelection(item: WJSampleImageItem, index: Int, indexPath: IndexPath) {
@@ -904,10 +1413,49 @@ extension WJPhotoPickerViewController: UICollectionViewDelegateFlowLayout {
     func collectionView(_ collectionView: UICollectionView,
                        layout collectionViewLayout: UICollectionViewLayout,
                        sizeForItemAt indexPath: IndexPath) -> CGSize {
-        // 所有 cell 使用相同的大小计算方式
-        let spacing = configuration.gridSpacing * CGFloat(configuration.numberOfColumns - 1)
-        let width = (collectionView.bounds.width - spacing) / CGFloat(configuration.numberOfColumns)
-        return CGSize(width: width, height: width)
+        return calculateItemSize(for: collectionView)
+    }
+    
+    // MARK: - Helper: Calculate Item Size
+    
+    private func calculateItemSize(for collectionView: UICollectionView) -> CGSize {
+        let screenWidth = collectionView.bounds.width
+        let columns = CGFloat(calculateColumns(for: screenWidth))
+        let spacing: CGFloat = 5  // 间距 5px
+        let margins: CGFloat = 16 * 2  // 左右边距各 16px
+        
+        let totalSpacing = (columns - 1) * spacing + margins
+        let itemWidth = (screenWidth - totalSpacing) / columns
+        
+        return CGSize(width: itemWidth, height: itemWidth)
+    }
+    
+    private func calculateColumns(for width: CGFloat) -> Int {
+        // 优先使用外部配置
+        if let custom = configuration.gridColumns {
+            return custom
+        }
+        
+        // 自动计算: 375+ 为 4列, <375 为 3列
+        return width >= 375 ? 4 : 3
+    }
+    
+    func collectionView(_ collectionView: UICollectionView,
+                       layout collectionViewLayout: UICollectionViewLayout,
+                       minimumInteritemSpacingForSectionAt section: Int) -> CGFloat {
+        return 5  // 间距 5px
+    }
+    
+    func collectionView(_ collectionView: UICollectionView,
+                       layout collectionViewLayout: UICollectionViewLayout,
+                       minimumLineSpacingForSectionAt section: Int) -> CGFloat {
+        return 5  // 间距 5px
+    }
+    
+    func collectionView(_ collectionView: UICollectionView,
+                       layout collectionViewLayout: UICollectionViewLayout,
+                       insetForSectionAt section: Int) -> UIEdgeInsets {
+        return UIEdgeInsets(top: 0, left: 16, bottom: 16, right: 16)  // 左右边距 16px
     }
     
     func collectionView(_ collectionView: UICollectionView,
@@ -969,5 +1517,58 @@ extension WJPhotoPickerViewController {
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
         // FloatingPanel 会自动处理滚动联动，这里可以添加其他自定义逻辑
         // 例如：根据滚动位置调整动图效果等
+    }
+}
+
+// MARK: - PHPickerViewControllerDelegate
+
+@available(iOS 14, *)
+extension WJPhotoPickerViewController: PHPickerViewControllerDelegate {
+    func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
+        picker.dismiss(animated: true)
+        
+        // 如果用户取消选择
+        guard !results.isEmpty else { return }
+        
+        // 处理选中的照片
+        var selectedImages: [UIImage] = []
+        let group = DispatchGroup()
+        
+        for result in results {
+            group.enter()
+            
+            // 加载图片
+            result.itemProvider.loadObject(ofClass: UIImage.self) { [weak self] object, error in
+                defer { group.leave() }
+                
+                if let image = object as? UIImage {
+                    selectedImages.append(image)
+                }
+            }
+        }
+        
+        // 所有图片加载完成后回调
+        group.notify(queue: .main) { [weak self] in
+            guard let self = self else { return }
+            
+            if !selectedImages.isEmpty {
+                // 使用 onCameraImageCaptured 回调返回图片
+                // 注意：PHPicker 返回的是 UIImage，不是 PHAsset
+                if self.configuration.allowsMultipleSelection {
+                    // 多选模式：依次调用回调
+                    for image in selectedImages {
+                        self.onCameraImageCaptured?(image)
+                    }
+                } else {
+                    // 单选模式：返回第一张图片
+                    if let firstImage = selectedImages.first {
+                        self.onCameraImageCaptured?(firstImage)
+                    }
+                }
+                
+                // 关闭选择器
+                self.dismiss(animated: true, completion: nil)
+            }
+        }
     }
 }

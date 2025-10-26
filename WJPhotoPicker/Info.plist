@@ -14,6 +14,10 @@
 	<key>NSCameraUsageDescription</key>
 	<string>需要使用相机拍摄照片</string>
 	
+	<!-- 阻止系统在 Limited 权限下自动弹出照片选择器 (iOS 14+) -->
+	<key>PHPhotoLibraryPreventAutomaticLimitedAccessAlert</key>
+	<true/>
+	
 	<!-- 其他必要配置 -->
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>

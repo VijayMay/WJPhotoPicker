@@ -58,7 +58,7 @@ class WJAlbumSelectorViewController: UIViewController {
     // 权限提示视图
     private lazy var permissionGuideView: UIView = {
         let containerView = UIView()
-        containerView.backgroundColor = .systemBackground
+        containerView.backgroundColor = .clear
         
         let stackView = UIStackView()
         stackView.axis = .vertical
@@ -77,8 +77,8 @@ class WJAlbumSelectorViewController: UIViewController {
         
         let settingsButton = UIButton(type: .system)
         settingsButton.titleLabel?.font = .systemFont(ofSize: 16, weight: .medium)
-        settingsButton.backgroundColor = .systemBlue
-        settingsButton.setTitleColor(.white, for: .normal)
+        settingsButton.backgroundColor = .white
+        settingsButton.setTitleColor(.black, for: .normal)
         settingsButton.layer.cornerRadius = 12
         settingsButton.addTarget(self, action: #selector(settingsButtonTapped), for: .touchUpInside)
         
@@ -250,7 +250,7 @@ extension WJAlbumSelectorViewController: UITableViewDataSource {
         
         let album = albums[indexPath.row]
         let isSelected = album == selectedAlbum
-        cell.configure(with: album, isSelected: isSelected)
+        cell.configure(album: album, isSelected: isSelected)
         
         return cell
     }
